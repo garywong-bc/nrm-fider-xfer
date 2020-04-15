@@ -9,32 +9,11 @@ cd \tmp
 pg_dump -f${POSTGRESQL_DATABASE}.dump -Fc -v  ${POSTGRESQL_DATABASE}
 ```
 
-## Copy to local device
-
-```bash
-oc -n b7cg3n-deploy cp mdsfider-postgresql-2-5gv44:/tmp/mdsfider.dump .
-```
-
-If the final target is local Docker, then
-
-```bash
-cd \tmp
-cp db-dump/mdsfider.dump var/fider/pg_data
-```
-
-
-If the final target is OpenShift, then
-
-```bash
-cd \tmp
-oc -n b7cg3n-deploy cp mdsfider.dump mdsfider-postgresql-2-5gv44:/tmp/
-```
-
 ## Configure target install
 
 ### Match target DB parameters
 
-If `docker-compose.ymnl`, then update both `.env` files to match username/password.
+If `docker-compose.yml`, then update both `.env` files to match username/password.
 
 If the final target is OpenShift, then update the Secret.
 
@@ -67,6 +46,29 @@ DROP TABLE IF EXISTS tenants             CASCADE;
 EOF
 ```
 
+
+### Copy to local device
+
+Once the DB pod has been deployed, copy the `.dump` file to the target filesystem.  There is no need for the Fider app to be actually set up as we'll be dropping and restoring from backup.
+
+```bash
+oc -n b7cg3n-deploy cp mdsfider-postgresql-2-5gv44:/tmp/mdsfider.dump .
+```
+
+If the final target is local Docker, then
+
+```bash
+cd \tmp
+cp db-dump/mdsfider.dump var/fider/pg_data
+```
+
+If the final target is OpenShift, then
+
+```bash
+cd \tmp
+oc -n b7cg3n-deploy cp mdsfider.dump mdsfider-postgresql-2-5gv44:/tmp/
+```
+
 ### Import data
 
 ```bash
@@ -75,7 +77,10 @@ pg_restore --verbose -U ${POSTGRES_USER}  -d ${POSTGRES_USER} mdsfider.dump
 
 ### Sign-in to verify the restore is successful
 
-If the SMTP Mail is configured then click on that email link.. otherwise:
+Visit `http://<targetFider>/signup/verify?k=<key>`
+
+
+If the SMTP Mail is configured then click on that email link..  rsh into the target DB container:
 
 ```bash
 psql -U ${POSTGRES_USER} ${POSTGRES_DATABASE}
@@ -87,7 +92,11 @@ Obtain `key` value and craft the URL to verify:
 
 #### Set new account to be Administrator
 
-If required, login via `psql`:
+If required, rsh into the target DB container:
+
+```bash
+psql -U ${POSTGRES_USER} ${POSTGRES_DATABASE}
+```
 
 ```sql
 mdsfider=#  update users set role = 3 where name = 'Gary.T.Wong@gov.bc.ca';
