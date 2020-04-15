@@ -1,0 +1,4 @@
+db-dump
+var/fider/pg_data
+.env
+*.sql

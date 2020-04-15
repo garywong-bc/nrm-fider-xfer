@@ -1,0 +1,77 @@
+version: '2'
+services:
+  db:
+    env_file:
+    - ./postgresql/.env  
+    restart: always
+    image: postgres:9.6
+    volumes:
+      - ./var/fider/pg_data:/var/lib/postgresql/data
+      - ./postgresql/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
+  
+  app:
+    env_file:
+    - ./fider/.env
+    restart: always
+    image: getfider/fider:e166d8d
+    ports:
+      - "9999:3000"
+    environment:
+      ###
+      # REQUIRED
+      #
+      # All these settings are required
+      ###
+
+      # Use production for best performance
+      # Use development for verbose logs
+      GO_ENV: production
+      
+      # Connection string to the PostgreSQL database. 
+      # This example uses the Docker service defined above
+      # DATABASE_URL: 
+      
+      # CHANGE THIS! You can generate a strong secret at https://randomkeygen.com/
+      # JWT_SECRET: 
+      
+      # From which account e-mails will be sent (required)
+      # EMAIL_NOREPLY:  
+
+      ###
+      # EMAIL
+      #
+      # Either EMAIL_MAILGUN_* or EMAIL_SMTP_* is required
+      ###
+
+      # EMAIL_MAILGUN_API: 
+      # EMAIL_MAILGUN_DOMAIN: 
+
+      # EMAIL_SMTP_HOST: smtp.gmail.com
+      # EMAIL_SMTP_PORT: 465
+      # EMAIL_SMTP_USERNAME: garywong.sbd@gmail.com
+      # EMAIL_SMTP_PASSWORD: 
+      
+      ###
+      # OPTIONAL
+      #
+      # Following settings are optional
+      ###
+
+      # Social OAuth: 
+      # Read more on https://getfider.com/docs/configuring-oauth/
+
+      # Facebook
+      # OAUTH_FACEBOOK_APPID: <fb_app_id>
+      # OAUTH_FACEBOOK_SECRET: <fb_app_secret>
+
+      # Google
+      # OAUTH_GOOGLE_CLIENTID: <google_app_id>
+      # OAUTH_GOOGLE_SECRET: <google_app_secret>
+
+      # GitHub
+      # OAUTH_GITHUB_CLIENTID: <github_client_id>
+      # OAUTH_GITHUB_SECRET: <github_secret>
+
+    depends_on:
+      - db
