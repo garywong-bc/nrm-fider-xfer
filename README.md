@@ -1,6 +1,6 @@
 # Transferal
 
-## Create renamed, re-tagged Fider image on target -tools namespace
+## Create renamed and re-tagged Fider image on target -tools namespace
 
 ```bash
 oc -n csnr-devops-lab-tools process -f ./openshift/fider-bcgov.xfer.bc.yaml | oc -n csnr-devops-lab-tools apply -f -
@@ -9,13 +9,16 @@ oc -n csnr-devops-lab-tools start-build nrm-feedback
 
 ## Scale down source MDS Fider
 
-https://mdsfider.pathfinder.gov.bc.ca
+To pause connections at https://mdsfider.pathfinder.gov.bc.ca
 
+```bash
 oc -n csnr-devops-lab-deploy scale dc mdsfider-app --replicas=0
+```
 
 ## Export Source DB, on Natural Resources Survey (deploy)
 
 From your local workstation, logged into the OpenShift Console
+
 ```bash
 oc -n b7cg3n-deploy rsh $(oc -n b7cg3n-deploy get pods | grep mdsfider-postgresql | grep Running | awk '{print $1}')
 ```
@@ -57,24 +60,41 @@ Match parameters
 
 Reset the DB
 
-`rm -rf var/fider/pg_data/*`
-run `docker-compose up -d db`, and once up copy the DB export to a mapped volume:
-`cp db-dump/mdsfider.dump var/fider/pg_data`
-`docker-compose exec db /bin/bash`
-`cd /var/lib/postgresql/data/`
-`pg_restore --verbose -U ${POSTGRES_USER}  -d ${POSTGRES_USER} mdsfider.dump`
-`psql -U ${POSTGRES_USER} ${POSTGRES_DATABASE}`
-`TRUNCATE TABLE logs RESTART IDENTITY CASCADE;`
-`exit`, and re-export to a smaller DB export file
-`pg_dump -U ${POSTGRES_USER} -f${POSTGRES_USER}.truncated.dump -Fc -v  ${POSTGRES_USER}`
-`exit`
+```bash
+rm -rf var/fider/pg_data/*
+run `docker-compose up -d db
+```
+
+Once the local Docker is up, copy the DB export to a mapped volume:
+
+```bash
+cp db-dump/mdsfider.dump var/fider/pg_data
+docker-compose exec db /bin/bash
+cd /var/lib/postgresql/data/
+pg_restore --verbose -U ${POSTGRES_USER}  -d ${POSTGRES_USER} mdsfider.dump
+psql -U ${POSTGRES_USER} ${POSTGRES_DATABASE}
+TRUNCATE TABLE logs RESTART IDENTITY CASCADE;
+exit
+```
+
+Thenre-export to a smaller DB export file:
+
+```bash
+pg_dump -U ${POSTGRES_USER} -f${POSTGRES_USER}.truncated.dump -Fc -v  ${POSTGRES_USER}
+exit
+```
 
 On your local machine, move the truncated DB Export file and save it for backup:
 
-`cp var/fider/pg_data/mdsfider.truncated.dump  db-dump/`
+```bash
+cp var/fider/pg_data/mdsfider.truncated.dump  db-dump/
+```
 
 Verify the size difference:
-`ls -lah db-dump/mdsfider*.dump`
+
+```bash
+ls -lah db-dump/mdsfider*.dump
+```
 
 ## Configure Target install
 
@@ -87,9 +107,9 @@ oc -n csnr-devops-lab-deploy apply -f mdsfider-postgresql.secret.yaml
 
 ### Deploy DB and import truncated DB export
 
-`oc -n csnr-devops-lab-deploy new-app --file=./openshift/postgresql.xfer.dc.yaml -p FEEDBACK_NAME=mdsfider`
-
 ```bash
+oc -n csnr-devops-lab-deploy new-app --file=./openshift/postgresql.xfer.dc.yaml -p FEEDBACK_NAME=mdsfider
+
 oc -n csnr-devops-lab-deploy cp db-dump/mdsfider.truncated.dump $(oc -n csnr-devops-lab-deploy get pods | grep mdsfider-postgresql | grep Running | awk '{print $1}'):/tmp
 ```
 
@@ -97,15 +117,13 @@ oc -n csnr-devops-lab-deploy cp db-dump/mdsfider.truncated.dump $(oc -n csnr-dev
 oc -n csnr-devops-lab-deploy rsh $(oc -n csnr-devops-lab-deploy get pods | grep mdsfider-postgresql | grep Running | awk '{print $1}')
 ```
 
-```
+```bash
 psql ${POSTGRESQL_DATABASE}  -c "ALTER USER ${POSTGRESQL_USER} WITH SUPERUSER"
 pg_restore --verbose -U ${POSTGRESQL_USER}  -d ${POSTGRESQL_USER} /tmp/mdsfider.truncated.dump
 psql ${POSTGRESQL_DATABASE}  -c "ALTER USER ${POSTGRESQL_USER} WITH NOSUPERUSER"
 ```
 
-HERE 1
-HERE 2
-
+HERE
 
 ### Match app parameters
 
