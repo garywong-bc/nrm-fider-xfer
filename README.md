@@ -101,20 +101,20 @@ ls -lah db-dump/mdsfider*.dump
 ### Match target DB parameters
 
 ```bash
-oc -n csnr-devops-lab-deploy apply -f mdsfider-jwt.secret.yaml
-oc -n csnr-devops-lab-deploy apply -f mdsfider-postgresql.secret.yaml
+oc -n empr-mds-prod apply -f mdsfider-jwt.secret.yaml
+oc -n empr-mds-prod apply -f mdsfider-postgresql.secret.yaml
 ```
 
 ### Deploy DB and import truncated DB export
 
 ```bash
-oc -n csnr-devops-lab-deploy new-app --file=./openshift/postgresql.xfer.dc.yaml -p FEEDBACK_NAME=mdsfider
+oc -n empr-mds-prod new-app --file=./openshift/postgresql.xfer.dc.yaml -p FEEDBACK_NAME=mdsfider
 
-oc -n csnr-devops-lab-deploy cp db-dump/mdsfider.truncated.dump $(oc -n csnr-devops-lab-deploy get pods | grep mdsfider-postgresql | grep Running | awk '{print $1}'):/tmp
+oc -n empr-mds-prod cp db-dump/mdsfider.truncated.dump $(oc -n empr-mds-prod get pods | grep mdsfider-postgresql | grep Running | awk '{print $1}'):/tmp
 ```
 
 ```bash
-oc -n csnr-devops-lab-deploy rsh $(oc -n csnr-devops-lab-deploy get pods | grep mdsfider-postgresql | grep Running | awk '{print $1}')
+oc -n empr-mds-prod rsh $(oc -n empr-mds-prodget pods | grep mdsfider-postgresql | grep Running | awk '{print $1}')
 ```
 
 ```bash
@@ -130,7 +130,7 @@ HERE
 Except for route to avoid route collision with https://mdsfider.pathfinder.gov.bc.ca 
 
 
-> oc -n csnr-devops-lab-deploy new-app --file=./openshift/fider-bcgov.xfer.dc.yaml -p FEEDBACK_NAME=mdsfider -p IS_NAMESPACE=csnr-devops-lab-tools EMAIL_SMTP_USERNAME=Gary.T.Wong@gov.bc.ca
+> oc -n empr-mds-prod new-app --file=./openshift/fider-bcgov.xfer.dc.yaml -p FEEDBACK_NAME=mdsfider -p IS_NAMESPACE=empr-mds-prod  EMAIL_SMTP_USERNAME=Gary.T.Wong@gov.bc.ca
 
 
 
